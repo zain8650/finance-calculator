@@ -4,6 +4,7 @@ import numpy as np
 import math
 from datetime import datetime, date
 import plotly.graph_objects as go
+import plotly.express as px
 import json
 import io
 from fpdf import FPDF
@@ -12,109 +13,558 @@ from fpdf import FPDF
 #                        PAGE CONFIG
 # ═══════════════════════════════════════════════════════════════
 st.set_page_config(
-    page_title="Financial Calculator Pro",
-    page_icon="🏦",
+    page_title="FinCalc Pro | Professional Financial Suite",
+    page_icon="💎",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # ═══════════════════════════════════════════════════════════════
-#                        CSS STYLES
+#                     PROFESSIONAL CSS THEME
 # ═══════════════════════════════════════════════════════════════
 st.markdown("""
 <style>
-    .main-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 30px;
-        border-radius: 20px;
-        text-align: center;
-        color: white;
-        margin-bottom: 30px;
-        box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
-    }
-    .main-header h1 { margin: 0; font-size: 2.5rem; }
-    .main-header p { margin: 10px 0 0 0; opacity: 0.9; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-    .result-box {
-        background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
-        padding: 30px;
-        border-radius: 20px;
-        color: white;
+    /* ===== ROOT VARIABLES ===== */
+    :root {
+        --primary: #0f172a;
+        --primary-light: #1e293b;
+        --accent: #3b82f6;
+        --accent-glow: rgba(59, 130, 246, 0.3);
+        --success: #10b981;
+        --success-glow: rgba(16, 185, 129, 0.3);
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --purple: #8b5cf6;
+        --cyan: #06b6d4;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --text-muted: #64748b;
+        --bg-primary: #0f172a;
+        --bg-secondary: #1e293b;
+        --bg-card: rgba(30, 41, 59, 0.8);
+        --border: rgba(148, 163, 184, 0.1);
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+        --shadow-glow: 0 0 20px var(--accent-glow);
+        --radius: 16px;
+        --radius-sm: 12px;
+    }
+
+    /* ===== GLOBAL RESET ===== */
+    html, body, [class*="css"] {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    }
+
+    .main .block-container {
+        padding: 2rem 3rem;
+        max-width: 1400px;
+    }
+
+    /* ===== SIDEBAR ===== */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%) !important;
+        border-right: 1px solid var(--border);
+    }
+
+    [data-testid="stSidebar"] .sidebar-content {
+        padding: 1.5rem !important;
+    }
+
+    /* ===== HERO HEADER ===== */
+    .hero-container {
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
+        padding: 3rem 2.5rem;
+        border-radius: var(--radius);
         text-align: center;
-        font-size: 1.8rem;
-        font-weight: bold;
-        margin: 25px 0;
-        box-shadow: 0 10px 40px rgba(0, 184, 148, 0.4);
+        margin-bottom: 2.5rem;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-lg), 0 0 40px rgba(59, 130, 246, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-container::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+        animation: pulse 4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.5; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+    }
+
+    .hero-container h1 {
+        margin: 0;
+        font-size: 2.8rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #8b5cf6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -0.02em;
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero-container p {
+        margin: 0.75rem 0 0 0;
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        font-weight: 400;
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero-badge {
+        display: inline-block;
+        background: rgba(59, 130, 246, 0.15);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        color: #60a5fa;
+        padding: 0.35rem 1rem;
+        border-radius: 9999px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-top: 1rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* ===== GLASS CARDS ===== */
+    .glass-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.75rem;
+        margin: 1rem 0;
+        box-shadow: var(--shadow);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .glass-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg), 0 0 30px rgba(59, 130, 246, 0.08);
+        border-color: rgba(59, 130, 246, 0.2);
+    }
+
+    .glass-card h3 {
+        color: var(--text-primary);
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .glass-card p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    .glass-card small {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        display: block;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border);
+    }
+
+    /* ===== RESULT BOXES ===== */
+    .result-box {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        padding: 2rem 2.5rem;
+        border-radius: var(--radius);
+        color: #34d399;
+        text-align: center;
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 1.5rem 0;
+        box-shadow: 0 0 30px rgba(16, 185, 129, 0.15);
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .result-box::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+        animation: shimmer 3s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { left: -100%; }
+        100% { left: 100%; }
     }
 
     .result-box-reject {
-        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-        padding: 30px;
-        border-radius: 20px;
-        color: white;
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(245, 158, 11, 0.15) 100%);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        padding: 2rem 2.5rem;
+        border-radius: var(--radius);
+        color: #f87171;
         text-align: center;
-        font-size: 1.8rem;
-        font-weight: bold;
-        margin: 25px 0;
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 1.5rem 0;
+        box-shadow: 0 0 30px rgba(239, 68, 68, 0.15);
+        backdrop-filter: blur(10px);
     }
 
+    /* ===== FORMULA & WORKING BOXES ===== */
     .formula-box {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        padding: 20px;
-        border-radius: 15px;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
+        padding: 1.75rem;
+        border-radius: var(--radius-sm);
         font-family: 'Courier New', monospace;
-        border-left: 5px solid #667eea;
-        margin: 20px 0;
-        font-size: 1.1rem;
+        border-left: 4px solid #3b82f6;
+        margin: 1.5rem 0;
+        border: 1px solid var(--border);
+        border-left-width: 4px;
+        color: var(--text-secondary);
+        font-size: 1rem;
+        line-height: 1.8;
+    }
+
+    .formula-box strong {
+        color: #60a5fa;
     }
 
     .working-box {
-        background: linear-gradient(135deg, #e8f8f5 0%, #d1f2eb 100%);
-        padding: 20px;
-        border-radius: 15px;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%);
+        padding: 1.75rem;
+        border-radius: var(--radius-sm);
         font-family: 'Courier New', monospace;
-        border-left: 5px solid #1abc9c;
-        margin: 20px 0;
-        font-size: 1.0rem;
+        border-left: 4px solid #10b981;
+        margin: 1.5rem 0;
+        border: 1px solid var(--border);
+        border-left-width: 4px;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        line-height: 2;
     }
 
     .variable-box {
-        background: linear-gradient(135deg, #e8f4f8 0%, #d1ecf1 100%);
-        padding: 20px;
-        border-radius: 15px;
-        border: 2px solid #17a2b8;
-        margin: 15px 0;
+        background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%);
+        padding: 1.5rem;
+        border-radius: var(--radius-sm);
+        border: 1px solid rgba(6, 182, 212, 0.2);
+        margin: 1rem 0;
+        color: var(--text-secondary);
     }
 
+    /* ===== TIP BOX ===== */
+    .tip-box {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
+        padding: 1.25rem 1.5rem;
+        border-radius: var(--radius-sm);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+        margin: 1.5rem 0;
+        color: #fbbf24;
+        font-size: 0.95rem;
+    }
+
+    .tip-box strong {
+        color: #fbbf24;
+        font-weight: 600;
+    }
+
+    /* ===== DOWNLOAD BOX ===== */
     .download-box {
-        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-        padding: 25px;
-        border-radius: 15px;
-        border: 2px solid #28a745;
-        margin: 30px 0;
-    }
-
-    .download-box h4 {
-        color: #28a745;
-        margin-bottom: 15px;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%);
+        padding: 2rem;
+        border-radius: var(--radius);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        margin: 2rem 0;
         text-align: center;
     }
 
-    .calc-card {
-        background: white;
-        padding: 20px;
-        border-radius: 15px;
-        border: 1px solid #e0e0e0;
-        margin: 10px 0;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    .download-box h4 {
+        color: #34d399;
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+        font-weight: 600;
     }
 
-    .tip-box {
-        background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
-        padding: 15px;
-        border-radius: 10px;
-        border-left: 5px solid #ffc107;
-        margin: 15px 0;
+    /* ===== METRIC CARDS ===== */
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin: 1.5rem 0;
+    }
+
+    .metric-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .metric-card:hover {
+        border-color: rgba(59, 130, 246, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .metric-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .metric-label {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    /* ===== SECTION HEADERS ===== */
+    .section-header {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 2rem 0 1rem 0;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .section-header::after {
+        content: '';
+        flex: 1;
+        height: 2px;
+        background: linear-gradient(90deg, var(--border), transparent);
+        margin-left: 1rem;
+    }
+
+    /* ===== BUTTONS ===== */
+    .stButton > button {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: var(--radius-sm) !important;
+        padding: 0.75rem 2rem !important;
+        font-weight: 600 !important;
+        font-size: 1rem !important;
+        box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4) !important;
+        transition: all 0.3s ease !important;
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+    }
+
+    .stButton > button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6) !important;
+        background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%) !important;
+    }
+
+    .stButton > button:active {
+        transform: translateY(0) !important;
+    }
+
+    /* ===== INPUT FIELDS ===== */
+    .stNumberInput input, .stSelectbox > div > div, .stDateInput input {
+        background: var(--bg-secondary) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: var(--radius-sm) !important;
+        color: var(--text-primary) !important;
+        font-size: 0.95rem !important;
+    }
+
+    .stNumberInput input:focus, .stSelectbox > div > div:focus {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+    }
+
+    .stRadio > div {
+        background: var(--bg-secondary) !important;
+        border-radius: var(--radius-sm) !important;
+        padding: 0.5rem !important;
+    }
+
+    /* ===== DATAFRAMES ===== */
+    .stDataFrame {
+        border-radius: var(--radius-sm) !important;
+        overflow: hidden !important;
+    }
+
+    .stDataFrame th {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+        color: #60a5fa !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        font-size: 0.8rem !important;
+        letter-spacing: 0.05em !important;
+        padding: 1rem !important;
+    }
+
+    .stDataFrame td {
+        background: var(--bg-secondary) !important;
+        color: var(--text-secondary) !important;
+        border-bottom: 1px solid var(--border) !important;
+        padding: 0.875rem 1rem !important;
+    }
+
+    .stDataFrame tr:hover td {
+        background: rgba(59, 130, 246, 0.05) !important;
+        color: var(--text-primary) !important;
+    }
+
+    /* ===== TABS ===== */
+    .stTabs [data-baseweb="tab-list"] {
+        background: var(--bg-secondary) !important;
+        border-radius: var(--radius-sm) !important;
+        padding: 0.5rem !important;
+        gap: 0.25rem !important;
+        border: 1px solid var(--border) !important;
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        color: var(--text-muted) !important;
+        font-weight: 500 !important;
+        border-radius: 8px !important;
+        padding: 0.5rem 1rem !important;
+    }
+
+    .stTabs [data-baseweb="tab-highlight"] {
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%) !important;
+        border-radius: 8px !important;
+    }
+
+    .stTabs [aria-selected="true"] {
+        color: white !important;
+        font-weight: 600 !important;
+    }
+
+    /* ===== SIDEBAR ITEMS ===== */
+    .sidebar-brand {
+        text-align: center;
+        padding: 1.5rem 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .sidebar-brand h2 {
+        background: linear-gradient(135deg, #60a5fa 0%, #8b5cf6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+        font-size: 1.5rem;
+        margin: 0;
+    }
+
+    .sidebar-brand p {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        margin: 0.5rem 0 0 0;
+    }
+
+    .sidebar-divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--border), transparent);
+        margin: 1rem 0;
+    }
+
+    /* ===== FOOTER ===== */
+    .footer {
+        text-align: center;
+        padding: 2.5rem 2rem;
+        margin-top: 3rem;
+        border-top: 1px solid var(--border);
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    .footer strong {
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-in {
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+
+    /* ===== STATUS INDICATORS ===== */
+    .status-accept {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-reject {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--bg-primary);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--bg-secondary);
+        border-radius: 4px;
+        border: 2px solid var(--bg-primary);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #334155;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -159,14 +609,13 @@ def add_to_history(calc_type, inputs, outputs):
 #              TIME INPUT HELPER (Years/Months/Days/Dates)
 # ═══════════════════════════════════════════════════════════════
 def get_time_input(key_prefix="time", label="Time Period"):
-    """Flexible time input: years, months, days, or date range. Returns time in years."""
-    st.markdown(f"#### ⏰ {label}")
+    st.markdown(f'<div class="section-header">⏰ {label}</div>', unsafe_allow_html=True)
     time_mode = st.selectbox(
         "How do you want to enter time?",
         ["Years", "Months", "Days", "Date Range (Pick two dates)"],
         key=f"{key_prefix}_mode"
     )
-    
+
     if time_mode == "Years":
         yrs = st.number_input("Enter Years", min_value=0.0, value=0.0, step=0.5, key=f"{key_prefix}_years")
         return yrs, f"{yrs} years"
@@ -201,11 +650,11 @@ class PDFReport(FPDF):
 
     def header(self):
         self.set_font('Arial', 'B', 18)
-        self.set_text_color(102, 126, 234)
-        self.cell(0, 12, 'Financial Calculator Pro', 0, 1, 'C')
+        self.set_text_color(59, 130, 246)
+        self.cell(0, 12, 'FinCalc Pro - Financial Report', 0, 1, 'C')
         self.set_font('Arial', 'I', 9)
         self.set_text_color(128, 128, 128)
-        self.cell(0, 5, f'Report: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', 0, 1, 'C')
+        self.cell(0, 5, f'Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', 0, 1, 'C')
         self.ln(8)
 
     def footer(self):
@@ -231,7 +680,7 @@ def generate_pdf_report(title, summary_dict, schedule_df=None):
         pdf.set_font('Arial', 'B', 11)
         pdf.cell(0, 8, 'Detailed Schedule:', 0, 1, 'L')
         pdf.set_font('Arial', 'B', 8)
-        pdf.set_fill_color(102, 126, 234)
+        pdf.set_fill_color(59, 130, 246)
         pdf.set_text_color(255, 255, 255)
         cols = schedule_df.columns.tolist()
         col_width = 190 / len(cols)
@@ -266,8 +715,8 @@ def render_download_section(calc_name, summary_dict, schedule_df=None, currency_
     st.markdown("---")
     st.markdown("""
     <div class="download-box">
-        <h4>📥 Download Your Results</h4>
-        <p style="text-align: center; color: #155724;">Click any button below to download</p>
+        <h4>📥 Export Your Analysis</h4>
+        <p style="color: #94a3b8; margin-top: 0.5rem;">Download your complete financial report in multiple formats</p>
     </div>
     """, unsafe_allow_html=True)
     file_base = calc_name.lower().replace(" ", "_") + "_" + datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -277,15 +726,15 @@ def render_download_section(calc_name, summary_dict, schedule_df=None, currency_
             csv_data = schedule_df.to_csv(index=False)
         else:
             csv_data = pd.DataFrame(list(summary_dict.items()), columns=['Parameter', 'Value']).to_csv(index=False)
-        st.download_button(label="📄 Download CSV", data=csv_data, file_name=f"{file_base}.csv", mime="text/csv", use_container_width=True)
+        st.download_button(label="📄 CSV", data=csv_data, file_name=f"{file_base}.csv", mime="text/csv", use_container_width=True)
     with col2:
         excel_data = generate_excel_report(summary_dict, schedule_df)
-        st.download_button(label="📊 Download Excel", data=excel_data, file_name=f"{file_base}.xlsx",
+        st.download_button(label="📊 Excel", data=excel_data, file_name=f"{file_base}.xlsx",
                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=True)
     with col3:
         try:
             pdf_data = generate_pdf_report(calc_name, summary_dict, schedule_df)
-            st.download_button(label="📑 Download PDF", data=pdf_data, file_name=f"{file_base}.pdf", mime="application/pdf", use_container_width=True)
+            st.download_button(label="📑 PDF", data=pdf_data, file_name=f"{file_base}.pdf", mime="application/pdf", use_container_width=True)
         except:
             st.button("📑 PDF Error", disabled=True, use_container_width=True)
     with col4:
@@ -296,31 +745,127 @@ def render_download_section(calc_name, summary_dict, schedule_df=None, currency_
             "summary": summary_dict,
             "schedule": schedule_df.to_dict('records') if schedule_df is not None else None
         }, indent=2, default=str)
-        st.download_button(label="🔗 Download JSON", data=json_data, file_name=f"{file_base}.json", mime="application/json", use_container_width=True)
+        st.download_button(label="🔗 JSON", data=json_data, file_name=f"{file_base}.json", mime="application/json", use_container_width=True)
 
 # ═══════════════════════════════════════════════════════════════
 #                      CHART FUNCTIONS
 # ═══════════════════════════════════════════════════════════════
 def create_pie_chart(labels, values, title):
-    colors = ['#667eea', '#00b894', '#e74c3c', '#f39c12']
-    fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=0.4, marker_colors=colors[:len(labels)], textinfo='label+percent')])
-    fig.update_layout(title=dict(text=title, font=dict(size=16)), height=400)
+    colors = ['#3b82f6', '#10b981', '#ef4444', '#f59e0b', '#8b5cf6', '#06b6d4']
+    fig = go.Figure(data=[go.Pie(
+        labels=labels, 
+        values=values, 
+        hole=0.55, 
+        marker_colors=colors[:len(labels)], 
+        textinfo='label+percent',
+        textfont=dict(size=13, color='white'),
+        hovertemplate='<b>%{label}</b><br>%{value:,.2f}<br>%{percent}<extra></extra>'
+    )])
+    fig.update_layout(
+        title=dict(text=f'<b>{title}</b>', font=dict(size=18, color='#f8fafc')),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(family='Inter, sans-serif', color='#94a3b8'),
+        height=420,
+        showlegend=True,
+        legend=dict(
+            orientation='h',
+            yanchor='bottom',
+            y=-0.1,
+            xanchor='center',
+            x=0.5,
+            font=dict(size=12)
+        )
+    )
     return fig
 
 def create_line_chart(x_data, y_data_dict, title, x_title, y_title):
     fig = go.Figure()
-    colors = ['#667eea', '#00b894', '#e74c3c']
+    colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
     for i, (name, y_data) in enumerate(y_data_dict.items()):
-        fig.add_trace(go.Scatter(x=x_data, y=y_data, mode='lines+markers', name=name, line=dict(color=colors[i % len(colors)], width=3)))
-    fig.update_layout(title=dict(text=title, font=dict(size=16)), xaxis_title=x_title, yaxis_title=y_title, hovermode='x unified', height=400)
+        fig.add_trace(go.Scatter(
+            x=x_data, 
+            y=y_data, 
+            mode='lines+markers', 
+            name=name, 
+            line=dict(color=colors[i % len(colors)], width=3),
+            marker=dict(size=8, line=dict(width=2, color='rgba(0,0,0,0.3)')),
+            fill='tozeroy' if i == 0 else None,
+            fillcolor=f'rgba({[59,16,245,239,139][i%5]}, {[130,185,158,68,92][i%5]}, {[246,129,11,68,246][i%5]}, 0.1)'
+        ))
+    fig.update_layout(
+        title=dict(text=f'<b>{title}</b>', font=dict(size=18, color='#f8fafc')),
+        xaxis_title=x_title,
+        yaxis_title=y_title,
+        hovermode='x unified',
+        height=420,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(family='Inter, sans-serif', color='#94a3b8'),
+        xaxis=dict(
+            gridcolor='rgba(148, 163, 184, 0.1)',
+            linecolor='rgba(148, 163, 184, 0.2)',
+            zerolinecolor='rgba(148, 163, 184, 0.1)'
+        ),
+        yaxis=dict(
+            gridcolor='rgba(148, 163, 184, 0.1)',
+            linecolor='rgba(148, 163, 184, 0.2)',
+            zerolinecolor='rgba(148, 163, 184, 0.1)'
+        ),
+        legend=dict(
+            orientation='h',
+            yanchor='bottom',
+            y=-0.15,
+            xanchor='center',
+            x=0.5,
+            bgcolor='rgba(30, 41, 59, 0.8)',
+            bordercolor='rgba(148, 163, 184, 0.2)',
+            borderwidth=1
+        )
+    )
     return fig
 
 def create_bar_chart(categories, values_dict, title, y_title):
     fig = go.Figure()
-    colors = ['#667eea', '#00b894', '#e74c3c']
+    colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444']
     for i, (name, values) in enumerate(values_dict.items()):
-        fig.add_trace(go.Bar(name=name, x=categories, y=values, marker_color=colors[i % len(colors)]))
-    fig.update_layout(title=dict(text=title, font=dict(size=16)), yaxis_title=y_title, barmode='group', height=400)
+        fig.add_trace(go.Bar(
+            name=name, 
+            x=categories, 
+            y=values, 
+            marker_color=colors[i % len(colors)],
+            marker_line_color='rgba(0,0,0,0.3)',
+            marker_line_width=1,
+            opacity=0.9
+        ))
+    fig.update_layout(
+        title=dict(text=f'<b>{title}</b>', font=dict(size=18, color='#f8fafc')),
+        yaxis_title=y_title,
+        barmode='group',
+        height=420,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(family='Inter, sans-serif', color='#94a3b8'),
+        xaxis=dict(
+            gridcolor='rgba(148, 163, 184, 0.1)',
+            linecolor='rgba(148, 163, 184, 0.2)'
+        ),
+        yaxis=dict(
+            gridcolor='rgba(148, 163, 184, 0.1)',
+            linecolor='rgba(148, 163, 184, 0.2)',
+            zerolinecolor='rgba(148, 163, 184, 0.1)'
+        ),
+        legend=dict(
+            orientation='h',
+            yanchor='bottom',
+            y=-0.15,
+            xanchor='center',
+            x=0.5,
+            bgcolor='rgba(30, 41, 59, 0.8)',
+            bordercolor='rgba(148, 163, 184, 0.2)',
+            borderwidth=1
+        )
+    )
     return fig
 
 # ═══════════════════════════════════════════════════════════════
@@ -328,15 +873,18 @@ def create_bar_chart(categories, values_dict, title, y_title):
 # ═══════════════════════════════════════════════════════════════
 with st.sidebar:
     st.markdown("""
-    <div style="text-align: center; padding: 15px;">
-        <h1 style="color: #667eea; margin: 0;">🏦</h1>
-        <h3 style="margin: 5px 0;">Financial Calculator</h3>
-        <p style="color: #888; font-size: 0.8rem;">Smart Auto-Calculate</p>
+    <div class="sidebar-brand">
+        <h2>💎 FinCalc Pro</h2>
+        <p>Professional Financial Suite</p>
     </div>
     """, unsafe_allow_html=True)
-    st.markdown("---")
+
+    st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
+
     currency_symbol = st.selectbox("💲 Currency", ["$", "₹", "€", "£", "Rs", "PKR"])
-    st.markdown("---")
+
+    st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
+
     calculator_type = st.radio(
         "📊 Calculator",
         [
@@ -352,14 +900,16 @@ with st.sidebar:
             "📖 Formulas"
         ]
     )
-    st.markdown("---")
+
+    st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
+
     st.markdown("""
-    <div class="tip-box">
-        <strong>💡 How to Use:</strong><br>
+    <div class="tip-box" style="margin-top: 1rem;">
+        <strong>💡 How to Use</strong><br><br>
         1. Enter known values<br>
-        2. Leave ONE field as 0 or blank<br>
+        2. Leave ONE field as 0<br>
         3. Click Calculate<br>
-        4. Download results!
+        4. Export results!
     </div>
     """, unsafe_allow_html=True)
 
@@ -368,45 +918,86 @@ with st.sidebar:
 # ═══════════════════════════════════════════════════════════════
 if calculator_type == "🏠 Home":
     st.markdown("""
-    <div class="main-header">
-        <h1>🏦 Financial Calculator Pro</h1>
-        <p>Smart Auto-Calculate Missing Values</p>
+    <div class="hero-container animate-in">
+        <h1>FinCalc Pro</h1>
+        <p>Professional Financial Analysis & Computation Suite</p>
+        <div class="hero-badge">✨ Smart Auto-Calculate Missing Values</div>
     </div>
     """, unsafe_allow_html=True)
 
     st.markdown("""
-    <div class="tip-box">
-        <h4>🎯 How It Works:</h4>
-        <ul>
-            <li><strong>Enter</strong> all values you know</li>
-            <li><strong>Leave ONE field as 0</strong> (or blank) that you want to calculate</li>
-            <li><strong>Click Calculate</strong> - the missing value will be computed automatically!</li>
-            <li><strong>Download</strong> your results in CSV, Excel, PDF, or JSON</li>
-        </ul>
+    <div class="glass-card animate-in delay-1">
+        <h3>🎯 Smart Calculation Engine</h3>
+        <p>Enter any 3 known values and leave 1 field as zero — our intelligent engine will automatically compute the missing variable using precise financial formulas with complete step-by-step working.</p>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("### 📦 Available Calculators")
+    st.markdown('<div class="section-header">📦 Available Calculators</div>', unsafe_allow_html=True)
+
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.markdown("""<div class="calc-card"><h4>📝 Simple Interest</h4><p>Find any one of: P, R, T, or I</p><small>Formula: I = (P × R × T) / 100</small></div>""", unsafe_allow_html=True)
-        st.markdown("""<div class="calc-card"><h4>🏧 EMI Calculator</h4><p>Calculate monthly EMI</p><small>With complete amortization schedule</small></div>""", unsafe_allow_html=True)
+        st.markdown("""
+        <div class="glass-card animate-in delay-1">
+            <h3>📝 Simple Interest</h3>
+            <p>Find any one of: Principal, Rate, Time, or Interest</p>
+            <small>I = (P × R × T) / 100</small>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("""
+        <div class="glass-card animate-in delay-2">
+            <h3>🏧 EMI Calculator</h3>
+            <p>Calculate monthly EMI with complete amortization schedule</p>
+            <small>Full payment breakdown with charts</small>
+        </div>
+        """, unsafe_allow_html=True)
     with col2:
-        st.markdown("""<div class="calc-card"><h4>📈 Compound Interest</h4><p>Find any one of: PV, FV, r, or n</p><small>Multiple compounding frequencies</small></div>""", unsafe_allow_html=True)
-        st.markdown("""<div class="calc-card"><h4>💰 SIP Calculator</h4><p>Investment returns with step-up</p><small>Year-wise wealth schedule</small></div>""", unsafe_allow_html=True)
+        st.markdown("""
+        <div class="glass-card animate-in delay-1">
+            <h3>📈 Compound Interest</h3>
+            <p>Find any one of: PV, FV, Rate, or Time</p>
+            <small>Multiple compounding frequencies supported</small>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("""
+        <div class="glass-card animate-in delay-2">
+            <h3>💰 SIP Calculator</h3>
+            <p>Investment returns with annual step-up capability</p>
+            <small>Year-wise wealth accumulation schedule</small>
+        </div>
+        """, unsafe_allow_html=True)
     with col3:
-        st.markdown("""<div class="calc-card"><h4>📉 NPV Calculator</h4><p>Net Present Value & IRR</p><small>Cash flow analysis</small></div>""", unsafe_allow_html=True)
-        st.markdown("""<div class="calc-card"><h4>🔄 Annuity Calculator</h4><p>Ordinary & Annuity Due</p><small>PV & FV of annuities</small></div>""", unsafe_allow_html=True)
+        st.markdown("""
+        <div class="glass-card animate-in delay-1">
+            <h3>📉 NPV Calculator</h3>
+            <p>Net Present Value & IRR Analysis</p>
+            <small>Cash flow analysis with profitability index</small>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("""
+        <div class="glass-card animate-in delay-2">
+            <h3>🔄 Annuity Calculator</h3>
+            <p>Ordinary & Annuity Due calculations</p>
+            <small>PV & FV of annuities with schedules</small>
+        </div>
+        """, unsafe_allow_html=True)
 
-    st.info("👈 Select a calculator from the sidebar to get started!")
+    st.markdown("""
+    <div class="glass-card animate-in delay-3" style="margin-top: 1.5rem;">
+        <h3>📃 Bond Valuation</h3>
+        <p>Calculate bond prices with complete coupon payment schedules and yield analysis</p>
+        <small>Price = Σ[C/(1+y)^t] + F/(1+y)^n</small>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.info("👈 Select a calculator from the sidebar to begin your financial analysis")
 
 # ═══════════════════════════════════════════════════════════════
 #                 SIMPLE INTEREST CALCULATOR
 # ═══════════════════════════════════════════════════════════════
 elif calculator_type == "📝 Simple Interest":
     st.markdown("""
-    <div class="main-header">
-        <h1>📝 Simple Interest Calculator</h1>
+    <div class="hero-container">
+        <h1>📝 Simple Interest</h1>
         <p>Auto-Calculate Any Missing Value</p>
     </div>
     """, unsafe_allow_html=True)
@@ -424,11 +1015,11 @@ elif calculator_type == "📝 Simple Interest":
 
     st.markdown("""
     <div class="tip-box">
-        💡 <strong>Enter 3 values, leave 1 as zero (0)</strong> - that value will be calculated!
+        💡 <strong>Enter 3 values, leave 1 as zero (0)</strong> — that value will be calculated automatically!
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("### 📝 Enter Your Values")
+    st.markdown('<div class="section-header">📝 Enter Your Values</div>', unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
         P = st.number_input(f"🏦 Principal (P) [{currency_symbol}]", min_value=0.0, value=0.0, step=1000.0, help="Enter 0 if you want to calculate this")
@@ -506,23 +1097,34 @@ elif calculator_type == "📝 Simple Interest":
                 </div>
                 """, unsafe_allow_html=True)
 
-                # WORKING STEPS
-                st.markdown("### 📐 Step-by-Step Working")
+                st.markdown('<div class="section-header">📐 Step-by-Step Working</div>', unsafe_allow_html=True)
                 working_html = "<br>".join(working_steps)
                 st.markdown(f'<div class="working-box">{working_html}</div>', unsafe_allow_html=True)
                 st.markdown(f"**Total Amount (P + I) = {currency_symbol}{P:,.2f} + {currency_symbol}{I:,.2f} = {format_currency(total_amount, currency_symbol)}**")
 
-                st.markdown("### 📊 Complete Summary")
-                col1, col2, col3, col4 = st.columns(4)
-                col1.metric("Principal (P)", format_currency(P, currency_symbol))
-                col2.metric("Rate (R)", f"{R:.4f}%")
-                col3.metric("Time (T)", f"{T:.4f} years")
-                col4.metric("Interest (I)", format_currency(I, currency_symbol))
+                st.markdown('<div class="section-header">📊 Complete Summary</div>', unsafe_allow_html=True)
+
+                cols = st.columns(4)
+                metrics = [
+                    ("Principal (P)", format_currency(P, currency_symbol)),
+                    ("Rate (R)", f"{R:.4f}%"),
+                    ("Time (T)", f"{T:.4f} years"),
+                    ("Interest (I)", format_currency(I, currency_symbol))
+                ]
+                for col, (label, value) in zip(cols, metrics):
+                    with col:
+                        st.markdown(f"""
+                        <div class="metric-card">
+                            <div class="metric-value">{value}</div>
+                            <div class="metric-label">{label}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
                 st.success(f"🏦 **Total Amount (P + I):** {format_currency(total_amount, currency_symbol)}")
 
                 # Year-wise Schedule
                 st.markdown("---")
-                st.markdown("### 📋 Year-wise Interest Schedule")
+                st.markdown('<div class="section-header">📋 Year-wise Interest Schedule</div>', unsafe_allow_html=True)
                 schedule_data = []
                 num_full_years = int(T) if T >= 1 else 1
                 for year in range(1, num_full_years + 1):
@@ -542,7 +1144,7 @@ elif calculator_type == "📝 Simple Interest":
 
                 # Charts
                 st.markdown("---")
-                st.markdown("### 📈 Visual Analysis")
+                st.markdown('<div class="section-header">📈 Visual Analysis</div>', unsafe_allow_html=True)
                 tab1, tab2 = st.tabs(["🥧 Breakdown", "📈 Growth"])
                 with tab1:
                     fig = create_pie_chart(['Principal', 'Total Interest'], [P, I], 'Principal vs Interest')
@@ -577,8 +1179,8 @@ elif calculator_type == "📝 Simple Interest":
 # ═══════════════════════════════════════════════════════════════
 elif calculator_type == "📈 Compound Interest":
     st.markdown("""
-    <div class="main-header">
-        <h1>📈 Compound Interest Calculator</h1>
+    <div class="hero-container">
+        <h1>📈 Compound Interest</h1>
         <p>Auto-Calculate Any Missing Value</p>
     </div>
     """, unsafe_allow_html=True)
@@ -597,7 +1199,7 @@ elif calculator_type == "📈 Compound Interest":
 
     st.markdown("""
     <div class="tip-box">
-        💡 <strong>Enter 3 values, leave 1 as zero (0)</strong> - that value will be calculated!
+        💡 <strong>Enter 3 values, leave 1 as zero (0)</strong> — that value will be calculated automatically!
     </div>
     """, unsafe_allow_html=True)
 
@@ -605,7 +1207,7 @@ elif calculator_type == "📈 Compound Interest":
     frequency = st.selectbox("🔄 Compounding Frequency", list(freq_options.keys()), index=3)
     m = freq_options[frequency]
 
-    st.markdown("### 📝 Enter Your Values")
+    st.markdown('<div class="section-header">📝 Enter Your Values</div>', unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
         PV = st.number_input(f"🏦 Present Value (PV) [{currency_symbol}]", min_value=0.0, value=0.0, step=10000.0, help="Enter 0 to calculate")
@@ -628,7 +1230,6 @@ elif calculator_type == "📈 Compound Interest":
         else:
             try:
                 working_steps = []
-                # Store original user rate for display
                 user_rate = r
 
                 if PV == 0:
@@ -691,21 +1292,30 @@ elif calculator_type == "📈 Compound Interest":
                 </div>
                 """, unsafe_allow_html=True)
 
-                # WORKING STEPS
-                st.markdown("### 📐 Step-by-Step Working")
+                st.markdown('<div class="section-header">📐 Step-by-Step Working</div>', unsafe_allow_html=True)
                 working_html = "<br>".join(working_steps)
                 st.markdown(f'<div class="working-box">{working_html}</div>', unsafe_allow_html=True)
 
-                st.markdown("### 📊 Complete Summary")
-                col1, col2, col3, col4 = st.columns(4)
-                col1.metric("Present Value", format_currency(PV, currency_symbol))
-                col2.metric("Future Value", format_currency(FV, currency_symbol))
-                col3.metric("Interest Earned", format_currency(compound_interest, currency_symbol))
-                col4.metric("Effective Rate", f"{effective_rate:.4f}%")
+                st.markdown('<div class="section-header">📊 Complete Summary</div>', unsafe_allow_html=True)
+                cols = st.columns(4)
+                metrics = [
+                    ("Present Value", format_currency(PV, currency_symbol)),
+                    ("Future Value", format_currency(FV, currency_symbol)),
+                    ("Interest Earned", format_currency(compound_interest, currency_symbol)),
+                    ("Effective Rate", f"{effective_rate:.4f}%")
+                ]
+                for col, (label, value) in zip(cols, metrics):
+                    with col:
+                        st.markdown(f"""
+                        <div class="metric-card">
+                            <div class="metric-value">{value}</div>
+                            <div class="metric-label">{label}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
 
                 # Year-wise Schedule
                 st.markdown("---")
-                st.markdown("### 📋 Year-wise Compounding Schedule")
+                st.markdown('<div class="section-header">📋 Year-wise Compounding Schedule</div>', unsafe_allow_html=True)
                 schedule_data = []
                 balance = PV
                 for year in range(1, int(n) + 1):
@@ -721,6 +1331,7 @@ elif calculator_type == "📈 Compound Interest":
                 st.dataframe(display_df, use_container_width=True, hide_index=True)
 
                 st.markdown("---")
+                st.markdown('<div class="section-header">📈 Visual Analysis</div>', unsafe_allow_html=True)
                 tab1, tab2 = st.tabs(["🥧 Breakdown", "📈 Growth"])
                 with tab1:
                     fig = create_pie_chart(['Principal', 'Compound Interest'], [PV, compound_interest], 'Principal vs Interest')
@@ -754,7 +1365,7 @@ elif calculator_type == "📈 Compound Interest":
 # ═══════════════════════════════════════════════════════════════
 elif calculator_type == "🏧 EMI Calculator":
     st.markdown("""
-    <div class="main-header">
+    <div class="hero-container">
         <h1>🏧 EMI Calculator</h1>
         <p>Calculate Loan EMI with Amortization Schedule</p>
     </div>
@@ -770,7 +1381,7 @@ elif calculator_type == "🏧 EMI Calculator":
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("### 📝 Enter Loan Details")
+    st.markdown('<div class="section-header">📝 Enter Loan Details</div>', unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
         loan_amount = st.number_input(f"🏦 Loan Amount [{currency_symbol}]", min_value=1000.0, value=1000000.0, step=50000.0)
@@ -821,19 +1432,28 @@ elif calculator_type == "🏧 EMI Calculator":
                 </div>
                 """, unsafe_allow_html=True)
 
-                # WORKING STEPS
-                st.markdown("### 📐 Step-by-Step Working")
+                st.markdown('<div class="section-header">📐 Step-by-Step Working</div>', unsafe_allow_html=True)
                 working_html = "<br>".join(working_steps)
                 st.markdown(f'<div class="working-box">{working_html}</div>', unsafe_allow_html=True)
 
-                col1, col2, col3, col4 = st.columns(4)
-                col1.metric("Loan Amount", format_currency(loan_amount, currency_symbol))
-                col2.metric("Total Interest", format_currency(total_interest, currency_symbol))
-                col3.metric("Total Payment", format_currency(total_payment, currency_symbol))
-                col4.metric("Interest %", f"{(total_interest/loan_amount)*100:.1f}%")
+                cols = st.columns(4)
+                metrics = [
+                    ("Loan Amount", format_currency(loan_amount, currency_symbol)),
+                    ("Total Interest", format_currency(total_interest, currency_symbol)),
+                    ("Total Payment", format_currency(total_payment, currency_symbol)),
+                    ("Interest %", f"{(total_interest/loan_amount)*100:.1f}%")
+                ]
+                for col, (label, value) in zip(cols, metrics):
+                    with col:
+                        st.markdown(f"""
+                        <div class="metric-card">
+                            <div class="metric-value">{value}</div>
+                            <div class="metric-label">{label}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
 
                 st.markdown("---")
-                st.markdown("### 📋 Amortization Schedule")
+                st.markdown('<div class="section-header">📋 Amortization Schedule</div>', unsafe_allow_html=True)
                 schedule_data = []
                 balance = loan_amount
                 for month in range(1, total_months + 1):
@@ -853,6 +1473,7 @@ elif calculator_type == "🏧 EMI Calculator":
                 st.dataframe(display_df, use_container_width=True, hide_index=True)
 
                 st.markdown("---")
+                st.markdown('<div class="section-header">📈 Visual Analysis</div>', unsafe_allow_html=True)
                 tab1, tab2 = st.tabs(["🥧 Breakdown", "📈 Balance Over Time"])
                 with tab1:
                     fig = create_pie_chart(['Principal', 'Total Interest'], [loan_amount, total_interest], 'Payment Breakdown')
@@ -883,7 +1504,7 @@ elif calculator_type == "🏧 EMI Calculator":
 # ═══════════════════════════════════════════════════════════════
 elif calculator_type == "💰 SIP Calculator":
     st.markdown("""
-    <div class="main-header">
+    <div class="hero-container">
         <h1>💰 SIP Calculator</h1>
         <p>Systematic Investment Plan with Step-up</p>
     </div>
@@ -899,7 +1520,7 @@ elif calculator_type == "💰 SIP Calculator":
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("### 📝 Enter Investment Details")
+    st.markdown('<div class="section-header">📝 Enter Investment Details</div>', unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
         monthly_sip = st.number_input(f"🏦 Monthly SIP [{currency_symbol}]", min_value=100.0, value=10000.0, step=1000.0)
@@ -957,24 +1578,35 @@ elif calculator_type == "💰 SIP Calculator":
             </div>
             """, unsafe_allow_html=True)
 
-            st.markdown("### 📐 Step-by-Step Working")
+            st.markdown('<div class="section-header">📐 Step-by-Step Working</div>', unsafe_allow_html=True)
             working_html = "<br>".join(working_steps)
             st.markdown(f'<div class="working-box">{working_html}</div>', unsafe_allow_html=True)
 
-            col1, col2, col3, col4 = st.columns(4)
-            col1.metric("Total Invested", format_currency(total_invested, currency_symbol))
-            col2.metric("Wealth Gained", format_currency(wealth_gained, currency_symbol))
-            col3.metric("Absolute Return", f"{absolute_return:.1f}%")
-            col4.metric("Final SIP", format_currency(schedule_df['Monthly SIP'].iloc[-1], currency_symbol))
+            cols = st.columns(4)
+            metrics = [
+                ("Total Invested", format_currency(total_invested, currency_symbol)),
+                ("Wealth Gained", format_currency(wealth_gained, currency_symbol)),
+                ("Absolute Return", f"{absolute_return:.1f}%"),
+                ("Final SIP", format_currency(schedule_df['Monthly SIP'].iloc[-1], currency_symbol))
+            ]
+            for col, (label, value) in zip(cols, metrics):
+                with col:
+                    st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="metric-value">{value}</div>
+                        <div class="metric-label">{label}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
             st.markdown("---")
-            st.markdown("### 📋 Year-wise Investment Schedule")
+            st.markdown('<div class="section-header">📋 Year-wise Investment Schedule</div>', unsafe_allow_html=True)
             display_df = schedule_df.copy()
             for col in ['Monthly SIP', 'Year Investment', 'Total Invested', 'Portfolio Value', 'Total Gain']:
                 display_df[col] = display_df[col].apply(lambda x: format_currency(x, currency_symbol))
             st.dataframe(display_df, use_container_width=True, hide_index=True)
 
             st.markdown("---")
+            st.markdown('<div class="section-header">📈 Visual Analysis</div>', unsafe_allow_html=True)
             tab1, tab2 = st.tabs(["📈 Growth", "🥧 Breakdown"])
             with tab1:
                 fig = create_line_chart(schedule_df['Year'].tolist(), {'Total Invested': schedule_df['Total Invested'].tolist(), 'Portfolio Value': schedule_df['Portfolio Value'].tolist()}, 'SIP Growth Over Time', 'Year', f'Amount ({currency_symbol})')
@@ -1006,7 +1638,7 @@ elif calculator_type == "💰 SIP Calculator":
 # ═══════════════════════════════════════════════════════════════
 elif calculator_type == "📉 NPV Calculator":
     st.markdown("""
-    <div class="main-header">
+    <div class="hero-container">
         <h1>📉 NPV Calculator</h1>
         <p>Net Present Value & IRR Analysis</p>
     </div>
@@ -1022,7 +1654,7 @@ elif calculator_type == "📉 NPV Calculator":
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("### 📝 Enter Project Details")
+    st.markdown('<div class="section-header">📝 Enter Project Details</div>', unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)
     with col1:
         initial_investment = st.number_input(f"🏦 Initial Investment [{currency_symbol}]", min_value=0.0, value=100000.0, step=10000.0)
@@ -1031,7 +1663,7 @@ elif calculator_type == "📉 NPV Calculator":
     with col3:
         num_years = st.number_input("⏰ Number of Years", min_value=1, max_value=30, value=5, step=1)
 
-    st.markdown("### 💵 Enter Annual Cash Flows")
+    st.markdown('<div class="section-header">💵 Enter Annual Cash Flows</div>', unsafe_allow_html=True)
     cash_flows = []
     cols = st.columns(min(num_years, 5))
     for i in range(num_years):
@@ -1089,18 +1721,28 @@ elif calculator_type == "📉 NPV Calculator":
             else:
                 st.markdown(f'<div class="result-box-reject">❌ NPV = {format_currency(npv, currency_symbol)} — REJECT PROJECT</div>', unsafe_allow_html=True)
 
-            st.markdown("### 📐 Step-by-Step Working")
+            st.markdown('<div class="section-header">📐 Step-by-Step Working</div>', unsafe_allow_html=True)
             working_html = "<br>".join(working_steps)
             st.markdown(f'<div class="working-box">{working_html}</div>', unsafe_allow_html=True)
 
-            col1, col2, col3, col4 = st.columns(4)
-            col1.metric("NPV", format_currency(npv, currency_symbol))
-            col2.metric("IRR", f"{irr_percent:.2f}%")
-            col3.metric("Profitability Index", f"{profitability_index:.2f}")
-            col4.metric("Decision", "ACCEPT ✅" if npv > 0 else "REJECT ❌")
+            cols = st.columns(4)
+            metrics = [
+                ("NPV", format_currency(npv, currency_symbol)),
+                ("IRR", f"{irr_percent:.2f}%"),
+                ("Profitability Index", f"{profitability_index:.2f}"),
+                ("Decision", "ACCEPT ✅" if npv > 0 else "REJECT ❌")
+            ]
+            for col, (label, value) in zip(cols, metrics):
+                with col:
+                    st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="metric-value">{value}</div>
+                        <div class="metric-label">{label}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
             st.markdown("---")
-            st.markdown("### 📋 Cash Flow Schedule")
+            st.markdown('<div class="section-header">📋 Cash Flow Schedule</div>', unsafe_allow_html=True)
             display_df = schedule_df.copy()
             display_df['Cash Flow'] = display_df['Cash Flow'].apply(lambda x: format_currency(x, currency_symbol))
             display_df['Present Value'] = display_df['Present Value'].apply(lambda x: format_currency(x, currency_symbol))
@@ -1108,6 +1750,7 @@ elif calculator_type == "📉 NPV Calculator":
             st.dataframe(display_df, use_container_width=True, hide_index=True)
 
             st.markdown("---")
+            st.markdown('<div class="section-header">📈 Visual Analysis</div>', unsafe_allow_html=True)
             tab1, tab2 = st.tabs(["📊 Cash Flows", "📈 NPV Profile"])
             with tab1:
                 fig = create_bar_chart([f'Y{y}' for y in schedule_df['Year'].tolist()], {'Cash Flow': schedule_df['Cash Flow'].tolist(), 'Present Value': schedule_df['Present Value'].tolist()}, 'Cash Flow vs Present Value', f'Amount ({currency_symbol})')
@@ -1143,7 +1786,7 @@ elif calculator_type == "📉 NPV Calculator":
 # ═══════════════════════════════════════════════════════════════
 elif calculator_type == "📃 Bond Valuation":
     st.markdown("""
-    <div class="main-header">
+    <div class="hero-container">
         <h1>📃 Bond Valuation</h1>
         <p>Calculate Bond Price with Coupon Schedule</p>
     </div>
@@ -1160,7 +1803,7 @@ elif calculator_type == "📃 Bond Valuation":
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("### 📝 Enter Bond Details")
+    st.markdown('<div class="section-header">📝 Enter Bond Details</div>', unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
         face_value = st.number_input(f"💵 Face Value [{currency_symbol}]", min_value=100.0, value=1000.0, step=100.0)
@@ -1211,7 +1854,7 @@ elif calculator_type == "📃 Bond Valuation":
 
             st.markdown(f'<div class="result-box">📃 Bond Price: {format_currency(bond_price, currency_symbol)}</div>', unsafe_allow_html=True)
 
-            st.markdown("### 📐 Step-by-Step Working")
+            st.markdown('<div class="section-header">📐 Step-by-Step Working</div>', unsafe_allow_html=True)
             working_html = "<br>".join(working_steps)
             st.markdown(f'<div class="working-box">{working_html}</div>', unsafe_allow_html=True)
 
@@ -1222,14 +1865,24 @@ elif calculator_type == "📃 Bond Valuation":
             else:
                 st.info(f"➡ **Par Bond** — Coupon Rate = YTM")
 
-            col1, col2, col3, col4 = st.columns(4)
-            col1.metric("Bond Price", format_currency(bond_price, currency_symbol))
-            col2.metric("PV of Coupons", format_currency(pv_coupons, currency_symbol))
-            col3.metric("PV of Face Value", format_currency(pv_face, currency_symbol))
-            col4.metric("Current Yield", f"{current_yield:.2f}%")
+            cols = st.columns(4)
+            metrics = [
+                ("Bond Price", format_currency(bond_price, currency_symbol)),
+                ("PV of Coupons", format_currency(pv_coupons, currency_symbol)),
+                ("PV of Face Value", format_currency(pv_face, currency_symbol)),
+                ("Current Yield", f"{current_yield:.2f}%")
+            ]
+            for col, (label, value) in zip(cols, metrics):
+                with col:
+                    st.markdown(f"""
+                    <div class="metric-card">
+                        <div class="metric-value">{value}</div>
+                        <div class="metric-label">{label}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
             st.markdown("---")
-            st.markdown("### 📋 Coupon Payment Schedule")
+            st.markdown('<div class="section-header">📋 Coupon Payment Schedule</div>', unsafe_allow_html=True)
             display_df = schedule_df.copy()
             display_df['Coupon Payment'] = display_df['Coupon Payment'].apply(lambda x: format_currency(x, currency_symbol))
             display_df['PV of Coupon'] = display_df['PV of Coupon'].apply(lambda x: format_currency(x, currency_symbol))
@@ -1240,6 +1893,7 @@ elif calculator_type == "📃 Bond Valuation":
                 st.dataframe(display_df, use_container_width=True, hide_index=True)
 
             st.markdown("---")
+            st.markdown('<div class="section-header">📈 Visual Analysis</div>', unsafe_allow_html=True)
             tab1, tab2 = st.tabs(["🥧 Breakdown", "📈 Price Sensitivity"])
             with tab1:
                 fig = create_pie_chart(['PV of Coupons', 'PV of Face Value'], [pv_coupons, pv_face], 'Bond Price Components')
@@ -1280,7 +1934,7 @@ elif calculator_type == "📃 Bond Valuation":
 # ═══════════════════════════════════════════════════════════════
 elif calculator_type == "🔄 Annuity Calculator":
     st.markdown("""
-    <div class="main-header">
+    <div class="hero-container">
         <h1>🔄 Annuity Calculator</h1>
         <p>Ordinary Annuity & Annuity Due — PV and FV</p>
     </div>
@@ -1316,7 +1970,7 @@ elif calculator_type == "🔄 Annuity Calculator":
     ann_frequency = st.selectbox("🔄 Payment Frequency", list(freq_options_ann.keys()), index=3, key="ann_freq")
     m_ann = freq_options_ann[ann_frequency]
 
-    st.markdown("### 📝 Enter Your Values")
+    st.markdown('<div class="section-header">📝 Enter Your Values</div>', unsafe_allow_html=True)
     st.markdown("*(Leave the field you want to calculate as 0)*")
 
     col1, col2 = st.columns(2)
@@ -1350,7 +2004,6 @@ elif calculator_type == "🔄 Annuity Calculator":
             calculated_value_str = ""
 
             if "FV" in calc_target:
-                # Calculate FV
                 if ann_pmt == 0 or ann_rate == 0 or total_periods == 0:
                     if ann_pmt == 0 and ann_rate > 0 and total_periods > 0 and ann_value > 0:
                         st.error("❌ Cannot calculate FV when PMT is 0. Try calculating PMT instead.")
@@ -1411,22 +2064,11 @@ elif calculator_type == "🔄 Annuity Calculator":
                     st.error("❌ Time period must be > 0.")
                     st.stop()
 
-                # Determine if user wants PMT from FV or PV context
-                # We use the label from calc_target radio — but we need both context
-                # Ask: are we solving for PMT given FV or PV?
-                pmt_context = st.session_state.get("_pmt_ctx", "FV")
-                # Since we can't re-ask, use ann_value as FV-based by default if label says FV
-                # Actually let user pick which value they provided
-                # We'll use a simple approach: the ann_value field label tells us
-
                 working_steps.append(f"Target Value = {currency_symbol}{target_val:,.2f}")
                 if r == 0:
                     pmt = target_val / n_p
                     working_steps.append(f"r = 0, PMT = Value / n = {target_val} / {n_p:.4f} = {currency_symbol}{pmt:,.2f}")
                 else:
-                    # For FV: PMT = FV × r / ((1+r)^n - 1)
-                    # For PV: PMT = PV × r / (1 - (1+r)^(-n))
-                    # We'll try FV approach
                     fv_factor = ((1 + r) ** n_p - 1) / r
                     if is_due:
                         fv_factor *= (1 + r)
@@ -1448,14 +2090,12 @@ elif calculator_type == "🔄 Annuity Calculator":
                     st.error("❌ PMT, time period, and target value must all be > 0 to calculate rate.")
                     st.stop()
 
-                # Newton's method to find r for FV equation
                 r_guess = 0.01
                 for _ in range(1000):
                     if is_due:
                         f_val = PMT * (((1 + r_guess) ** n_p - 1) / r_guess) * (1 + r_guess) - target_val
                     else:
                         f_val = PMT * (((1 + r_guess) ** n_p - 1) / r_guess) - target_val
-                    # Numerical derivative
                     dr = 0.0001
                     if is_due:
                         f_val2 = PMT * (((1 + r_guess + dr) ** n_p - 1) / (r_guess + dr)) * (1 + r_guess + dr) - target_val
@@ -1488,8 +2128,6 @@ elif calculator_type == "🔄 Annuity Calculator":
                     st.error("❌ PMT, rate, and target value must all be > 0.")
                     st.stop()
 
-                # FV = PMT × ((1+r)^n - 1)/r [× (1+r) if due]
-                # n = ln(FV×r/PMT + 1) / ln(1+r)  for ordinary
                 if is_due:
                     adj_target = target_val / (1 + r)
                 else:
@@ -1505,14 +2143,12 @@ elif calculator_type == "🔄 Annuity Calculator":
 
             st.markdown(f'<div class="result-box">✅ {calculated_field} = {calculated_value_str}</div>', unsafe_allow_html=True)
 
-            # WORKING STEPS
-            st.markdown("### 📐 Step-by-Step Working")
+            st.markdown('<div class="section-header">📐 Step-by-Step Working</div>', unsafe_allow_html=True)
             working_html = "<br>".join(working_steps)
             st.markdown(f'<div class="working-box">{working_html}</div>', unsafe_allow_html=True)
 
-            # Build payment schedule
             st.markdown("---")
-            st.markdown("### 📋 Period-wise Schedule")
+            st.markdown('<div class="section-header">📋 Period-wise Schedule</div>', unsafe_allow_html=True)
 
             r_sched = rate_per_period if ann_rate > 0 else 0
             pmt_sched = ann_pmt if ann_pmt > 0 else (result_value if "PMT" in calculated_field else 0)
@@ -1545,8 +2181,8 @@ elif calculator_type == "🔄 Annuity Calculator":
                 else:
                     st.dataframe(display_df, use_container_width=True, hide_index=True)
 
-                # Chart
                 st.markdown("---")
+                st.markdown('<div class="section-header">📈 Visual Analysis</div>', unsafe_allow_html=True)
                 fig = create_line_chart(schedule_df['Period'].tolist(), {'Balance (FV)': schedule_df['Balance (FV)'].tolist()}, 'Annuity Growth', 'Period', f'Balance ({currency_symbol})')
                 st.plotly_chart(fig, use_container_width=True)
             else:
@@ -1556,7 +2192,7 @@ elif calculator_type == "🔄 Annuity Calculator":
                 'Calculation Type': f'Annuity ({due_label})',
                 'Calculated Field': calculated_field,
                 'Calculated Value': calculated_value_str,
-                'Payment (PMT)': format_currency(ann_pmt, currency_symbol) if ann_pmt > 0 else calculated_value_str if "PMT" in calculated_field else "N/A",
+                'Payment (PMT)': format_currency(ann_pmt, currency_symbol) if ann_pmt > 0 else (calculated_value_str if "PMT" in calculated_field else "N/A"),
                 'Annual Rate': f'{ann_rate:.4f}%' if ann_rate > 0 else (calculated_value_str if "Rate" in calculated_field else "N/A"),
                 'Time': ann_time_desc,
                 'Payment Frequency': ann_frequency,
@@ -1573,7 +2209,7 @@ elif calculator_type == "🔄 Annuity Calculator":
 # ═══════════════════════════════════════════════════════════════
 elif calculator_type == "📋 History":
     st.markdown("""
-    <div class="main-header">
+    <div class="hero-container">
         <h1>📋 Calculation History</h1>
         <p>View and Export Your Past Calculations</p>
     </div>
@@ -1581,10 +2217,10 @@ elif calculator_type == "📋 History":
 
     if st.session_state.calculation_history:
         history_df = pd.DataFrame(st.session_state.calculation_history)
-        st.markdown(f"### 📊 Total Records: {len(history_df)}")
+        st.markdown(f'<div class="section-header">📊 Total Records: {len(history_df)}</div>', unsafe_allow_html=True)
         st.dataframe(history_df, use_container_width=True, hide_index=True)
         st.markdown("---")
-        st.markdown("### 📥 Export History")
+        st.markdown('<div class="section-header">📥 Export History</div>', unsafe_allow_html=True)
         col1, col2, col3, col4 = st.columns(4)
         with col1:
             csv = history_df.to_csv(index=False)
@@ -1608,71 +2244,87 @@ elif calculator_type == "📋 History":
 # ═══════════════════════════════════════════════════════════════
 elif calculator_type == "📖 Formulas":
     st.markdown("""
-    <div class="main-header">
+    <div class="hero-container">
         <h1>📖 Formula Reference</h1>
+        <p>Complete Financial Mathematics Library</p>
     </div>
     """, unsafe_allow_html=True)
 
     st.markdown("""
-    ### 📝 Simple Interest
-    ```
-    I = (P × R × T) / 100
-    P = (I × 100) / (R × T)
-    R = (I × 100) / (P × T)
-    T = (I × 100) / (P × R)
-    ```
+    <div class="formula-box">
+    <h3 style="color:#60a5fa; margin-top:0;">📝 Simple Interest</h3>
+    <pre style="color:#94a3b8; font-size:0.95rem; line-height:2;">
+I = (P × R × T) / 100
+P = (I × 100) / (R × T)
+R = (I × 100) / (P × T)
+T = (I × 100) / (P × R)
+    </pre>
+    </div>
 
-    ### 📈 Compound Interest
-    ```
-    FV = PV × (1 + r/m)^(n×m)
-    PV = FV / (1 + r/m)^(n×m)
-    r  = m × [(FV/PV)^(1/(n×m)) - 1]
-    n  = ln(FV/PV) / [m × ln(1 + r/m)]
-    Effective Rate = (1 + r/m)^m - 1
-    ```
+    <div class="formula-box">
+    <h3 style="color:#60a5fa; margin-top:0;">📈 Compound Interest</h3>
+    <pre style="color:#94a3b8; font-size:0.95rem; line-height:2;">
+FV = PV × (1 + r/m)^(n×m)
+PV = FV / (1 + r/m)^(n×m)
+r  = m × [(FV/PV)^(1/(n×m)) - 1]
+n  = ln(FV/PV) / [m × ln(1 + r/m)]
+Effective Rate = (1 + r/m)^m - 1
+    </pre>
+    </div>
 
-    ### 🏧 EMI
-    ```
-    EMI = P × r × (1+r)^n / [(1+r)^n - 1]
-    Where: r = monthly rate, n = total months
-    ```
+    <div class="formula-box">
+    <h3 style="color:#60a5fa; margin-top:0;">🏧 EMI</h3>
+    <pre style="color:#94a3b8; font-size:0.95rem; line-height:2;">
+EMI = P × r × (1+r)^n / [(1+r)^n - 1]
+Where: r = monthly rate, n = total months
+    </pre>
+    </div>
 
-    ### 💰 SIP Future Value
-    ```
-    FV = P × [(1+r)^n - 1] / r × (1+r)
-    ```
+    <div class="formula-box">
+    <h3 style="color:#60a5fa; margin-top:0;">💰 SIP Future Value</h3>
+    <pre style="color:#94a3b8; font-size:0.95rem; line-height:2;">
+FV = P × [(1+r)^n - 1] / r × (1+r)
+    </pre>
+    </div>
 
-    ### 📉 NPV & IRR
-    ```
-    NPV = -C₀ + Σ[CFₜ / (1+r)^t]
-    IRR = Rate where NPV = 0
-    ```
+    <div class="formula-box">
+    <h3 style="color:#60a5fa; margin-top:0;">📉 NPV & IRR</h3>
+    <pre style="color:#94a3b8; font-size:0.95rem; line-height:2;">
+NPV = -C₀ + Σ[CFₜ / (1+r)^t]
+IRR = Rate where NPV = 0
+    </pre>
+    </div>
 
-    ### 📃 Bond Valuation
-    ```
-    Price = Σ[C/(1+y)^t] + F/(1+y)^n
-    ```
+    <div class="formula-box">
+    <h3 style="color:#60a5fa; margin-top:0;">📃 Bond Valuation</h3>
+    <pre style="color:#94a3b8; font-size:0.95rem; line-height:2;">
+Price = Σ[C/(1+y)^t] + F/(1+y)^n
+    </pre>
+    </div>
 
-    ### 🔄 Annuity — Ordinary
-    ```
-    FV = PMT × [((1+r)^n - 1) / r]
-    PV = PMT × [(1 - (1+r)^(-n)) / r]
-    ```
+    <div class="formula-box">
+    <h3 style="color:#60a5fa; margin-top:0;">🔄 Annuity — Ordinary</h3>
+    <pre style="color:#94a3b8; font-size:0.95rem; line-height:2;">
+FV = PMT × [((1+r)^n - 1) / r]
+PV = PMT × [(1 - (1+r)^(-n)) / r]
+    </pre>
+    </div>
 
-    ### 🔄 Annuity — Due (Beginning of Period)
-    ```
-    FV = PMT × [((1+r)^n - 1) / r] × (1+r)
-    PV = PMT × [(1 - (1+r)^(-n)) / r] × (1+r)
-    ```
+    <div class="formula-box">
+    <h3 style="color:#60a5fa; margin-top:0;">🔄 Annuity — Due (Beginning of Period)</h3>
+    <pre style="color:#94a3b8; font-size:0.95rem; line-height:2;">
+FV = PMT × [((1+r)^n - 1) / r] × (1+r)
+PV = PMT × [(1 - (1+r)^(-n)) / r] × (1+r)
+    </pre>
+    </div>
     """)
 
 # ═══════════════════════════════════════════════════════════════
 #                         FOOTER
 # ═══════════════════════════════════════════════════════════════
-st.markdown("---")
 st.markdown("""
-<div style="text-align: center; padding: 20px; color: #888;">
-    🏦 Financial Calculator Pro | Smart Auto-Calculate<br>
-    <small>Leave any field as 0 to calculate it • Download in CSV, Excel, PDF, JSON</small>
+<div class="footer">
+    <strong>💎 FinCalc Pro</strong> | Professional Financial Analysis Suite<br>
+    <small style="color: #64748b;">Smart Auto-Calculate • Export in CSV, Excel, PDF, JSON • Precision Financial Mathematics</small>
 </div>
 """, unsafe_allow_html=True)
